@@ -1,8 +1,12 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE DefaultSignatures, FlexibleContexts, MultiParamTypeClasses #-}
 {-# LANGUAGE TypeSynonymInstances, FlexibleInstances, KindSignatures, TypeOperators #-}
 {-# LANGUAGE FunctionalDependencies, EmptyDataDecls, UndecidableInstances #-}
 --{-# LANGUAGE OverlappingInstances, ViewPatterns #-}
 {-# LANGUAGE ViewPatterns #-}
+#if MIN_VERSION_base(4,9,0)
+{-# LANGUAGE DataKinds #-}
+#endif
 
 -- | S-Expressions are represented by 'Sexp'.  Conversion to and from arbitrary types is
 -- done through 'Sexpable'.
@@ -46,6 +50,9 @@ module Data.Sexp (
         escape, unescape
     ) where
 
+#if MIN_VERSION_base(4,9,0)
+import Prelude hiding (fail)
+#endif
 import Control.Applicative ( Applicative(..), Alternative(..), (<$>) )
 import Control.Monad.ST ( ST )
 import Data.Bits ( shiftR )
@@ -64,6 +71,11 @@ import qualified Data.Map as M
 import qualified Data.Set as S
 import qualified Data.Vector as V
 import qualified Data.Vector.Mutable as VM
+
+#if MIN_VERSION_base(4,9,0)
+fail :: String -> a
+fail = error
+#endif
 
 -- | A 'ByteString'-based S-Expression.  Conceptually, a 'Sexp' is
 -- either an single atom represented by a 'ByteString', or a list of
@@ -196,7 +208,11 @@ data True
 data False
 
 instance (IsRecord f b) => IsRecord (f :*: g) b
+#if MIN_VERSION_base(4,9,0)
+instance {-# OVERLAPPING #-} IsRecord (M1 S ('MetaSel 'Nothing a b c) f) False
+#else
 instance {-# OVERLAPPING #-} IsRecord (M1 S NoSelector f) False
+#endif
 instance {-# OVERLAPPABLE #-} (IsRecord f b) => IsRecord (M1 S c f) b
 instance IsRecord (K1 i c) True
 instance IsRecord U1 False
